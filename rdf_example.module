@@ -28,3 +28,49 @@ function rdf_example_help($path, $arg) {
       return t('This is simple help text for rdf_example');
   }
 }
+
+
+/**
+ * Implements hook_rdf_mapping().
+ *
+ * This hook should only be used to define the RDF mapping for an entity or
+ * bundle that has been defined by this module. On installation, this mapping
+ * will be saved to the database. To alter anything in this mapping after module
+ * installation (or to alter bundles defined in another module), the RDF CRUD
+ * functions should be used, as shown below.
+ */
+// From Drupal 7 API :
+// Allow modules to define RDF mappings for field bundles.
+// Modules defining their own field bundles can specify which RDF semantics 
+// should be used to annotate these bundles. These mappings are then used for 
+// automatic RDFa output in the HTML code.
+//
+// However, I'm not sure what this hook does.  After adding this hook (only),
+// I'm not seeing any difference in the HTML source.
+function rdf_example_rdf_mappinG() {
+  return array(
+    array(
+      'type'    => 'node',
+      'bundle'  => 'recipe',
+      'mapping' => array(
+        'rdftype' => array('v:Recipe'),
+        // We don't use the default bundle mapping for title. Instead, we add
+        // the v:name property. We still want to use dc:title as well, though,
+        // so we include it in the array.
+        'title' => array(
+          'predicates' => array('dc:title', 'v:name'),
+        ),
+        'recipe_summary' => array(
+          'predicates' => array('v:summary'),
+        ),
+        // The photo URI isn't a string but instead points to a resource, so we
+        // indicate that the attribute type is rel. If type isn't specified, it
+        // defaults to property, which is used for string values.
+        'recipe_photo' => array(
+          'predicates' => array('v:photo'),
+          'type'       => 'rel',
+        ),
+      ),
+    ),
+  );
+}
