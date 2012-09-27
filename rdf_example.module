@@ -1,0 +1,30 @@
+<?php
+/**
+ * @file
+ * This is an example outlining how a module can be used to define RDF mappings.
+ * We define mappings for a node type defined in this module. We also customize
+ * mappings for a node type that is defined in another module, node_example.
+ */
+
+
+
+
+/**
+ * Implements hook_help().
+ */
+function rdf_example_help($path, $arg) {
+  switch ($path) {
+    case 'examples/rdf_example':
+      return "<p>" . t(
+        "The RDF Example module provides RDF mappings for a custom node type and
+        alters another node type's RDF mapping.
+        You can check your RDF using a <a href='!parser'>parser</a> by copying
+        and pasting your HTML source code into the box. For clearest results,
+        use Turtle as your output format.",
+        array('!parser' => url('http://www.w3.org/2007/08/pyRdfa/#distill_by_input'))
+      ) . "</p>";
+    case 'admin/help#rdf_example':
+      // This is also viewable from a 'Help' link on the Module page near the module listing
+      return t('This is simple help text for rdf_example');
+  }
+}

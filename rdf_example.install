@@ -1,0 +1,142 @@
+<?php
+/**
+ * @file
+ * Install file for RDF Example module.
+ *
+ * To demonstrate hook_rdf_mapping, this module creates it's own node type. For
+ * more information on creating node types, see Node Example.
+ */
+
+/**
+ * Implements hook_install().
+ *
+ * - Create photo, summary fields.
+ * - Create photo, summary instances.
+ *
+ * @see node_type_set_defaults()
+ * @see field_info_instance()
+ * @see field_update_instance()
+ * @see field_create_field()
+ * @see field_create_instance()
+ */
+// At some point, the following four tables will be created :
+//  - field_data_recipe_photo
+//  - field_data_recipe_summary
+//  - field_revision_recipe_photo
+//  - field_revision_recipe_summary
+// I'm not sure when these tables showed up -- either after installing the module
+// or upon insertion of the first node.  I kind of suspect the later, but I'm not
+// 100 percent sure as I was maybe looking at some stale data in PHPMyAdmin.
+// Either way, to insert a recipe node, you don't need need much (if any) code
+// in the .module. The code in the .module only does RDFa stuff, and won't
+// affect simply inserting a recipe node.
+function rdf_example_install() {
+  // use get_t() to get the name of our localization function for translation
+  // during install, when t() is not available.
+  $t = get_t();
+
+  // Define the node type.
+  $rdf_example = array(
+    'type'        => 'recipe',
+    'name'        => $t('Recipe'),
+    'base'        => 'node_content',
+    'description' => $t('The recipe node is defined to demonstrate RDF mapping.'),
+  );
+
+  // Set additional defaults and save the content type.
+  // This is essentially how you make a new content type ("node" type) programatically
+  $content_type = node_type_set_defaults($rdf_example);
+  node_type_save($content_type);
+
+  // Create all the fields we are adding to our content type.
+  // http://api.drupal.org/api/function/field_create_field/7
+  // Creates a field. This function does not bind the field to any bundle; use field_create_instance()
+  foreach (_rdf_example_installed_fields() as $field) {
+    field_create_field($field);
+  }
+
+  // Create all the instances for our fields.
+  // http://api.drupal.org/api/function/field_create_instance/7
+  // This creates an instance of a field, binding it to a bundle.
+  // A bundle is an entity type like 'Article' or 'Page' for nodes
+  foreach (_rdf_example_installed_instances() as $instance) {
+    $instance['entity_type'] = 'node';
+    $instance['bundle']      = $rdf_example['type'];
+    field_create_instance($instance);
+  }
+}
+
+/**
+ * Return a structured array defining the fields created by this content type.
+ */
+// Again, I think this could be called more accurately _rdf_example_installed_or_to_be_installed_fields()
+function _rdf_example_installed_fields() {
+  $t = get_t();
+  return array(
+    // This is one field we're adding
+    'recipe_photo' => array(
+      'field_name'  => 'recipe_photo',
+      'cardinality' => 1,
+      'type'        => 'image',
+    ),
+    // This is the other field we're adding
+    'recipe_summary' => array(
+      'field_name'  => 'recipe_summary',
+      'cardinality' => 1,
+      'type'        => 'text',
+      'settings'    => array(
+        'max_length' => 500,
+      ),
+    ),
+  );
+}
+
+/**
+ * Return a structured array defining the instances for this content type.
+ */
+// Again, I think this could be called more accurately _rdf_example_installed_or_to_be_installed_instances()
+function _rdf_example_installed_instances() {
+  $t = get_t();
+  return array(
+    'recipe_photo' => array(
+      'field_name'  => 'recipe_photo',
+      'label'       => $t('Photo of the prepared dish'),
+    ),
+    'recipe_summary' => array(
+      'field_name' => 'recipe_summary',
+      'label'       => $t('Short summary describing the dish'),
+      'widget'      => array(
+        'type'    => 'text_textarea',
+      ),
+    ),
+  );
+}
+
+
+/**
+ * Implements hook_uninstall().
+ */
+function rdf_example_uninstall() {
+  // Delete recipe content.
+  $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
+  $result = db_query($sql, array(':type' => 'recipe'));
+  $nids = array();
+  foreach ($result as $row) {
+    $nids[] = $row->nid;
+  }
+  node_delete_multiple($nids);
+
+  // Delete field instances for now.
+  // Check status of http://drupal.org/node/1015846
+  // This deletes the "data" associated with the node type "recipe"
+  $instances = field_info_instances('node', 'recipe');
+  foreach ($instances as $instance_name => $instance) {
+    field_delete_instance($instance);
+  }
+
+  // Delete node type.
+  // Now we delete the meta-data associated with node type 'recipe'
+  node_type_delete('recipe');
+
+  field_purge_batch(1000);
+}
