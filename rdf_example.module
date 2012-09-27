@@ -8,28 +8,6 @@
 
 
 
-
-/**
- * Implements hook_help().
- */
-function rdf_example_help($path, $arg) {
-  switch ($path) {
-    case 'examples/rdf_example':
-      return "<p>" . t(
-        "The RDF Example module provides RDF mappings for a custom node type and
-        alters another node type's RDF mapping.
-        You can check your RDF using a <a href='!parser'>parser</a> by copying
-        and pasting your HTML source code into the box. For clearest results,
-        use Turtle as your output format.",
-        array('!parser' => url('http://www.w3.org/2007/08/pyRdfa/#distill_by_input'))
-      ) . "</p>";
-    case 'admin/help#rdf_example':
-      // This is also viewable from a 'Help' link on the Module page near the module listing
-      return t('This is simple help text for rdf_example');
-  }
-}
-
-
 /**
  * Implements hook_rdf_mapping().
  *
@@ -41,8 +19,8 @@ function rdf_example_help($path, $arg) {
  */
 // From Drupal 7 API :
 // Allow modules to define RDF mappings for field bundles.
-// Modules defining their own field bundles can specify which RDF semantics 
-// should be used to annotate these bundles. These mappings are then used for 
+// Modules defining their own field bundles can specify which RDF semantics
+// should be used to annotate these bundles. These mappings are then used for
 // automatic RDFa output in the HTML code.
 //
 // However, I'm not sure what this hook does.  After adding this hook (only),
@@ -73,4 +51,52 @@ function rdf_example_rdf_mappinG() {
       ),
     ),
   );
+}
+
+
+/*
+ * Implements hook_rdf_namespaces().
+ *
+ * This hook should be used to define any prefixes used by this module that are
+ * not already defined in core by rdf_rdf_namespaces.
+ *
+ * http://api.drupal.org/api/drupal/modules--rdf--rdf.api.php/function/hook_rdf_namespaces/7
+ */
+// This does add an RDF name space to the to <html container of form :
+// <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" version="XHTML+RDFa 1.0" dir="ltr"
+//  xmlns:content="http://purl.org/rss/1.0/modules/content/"
+//...
+//  xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+// xmlns:v="http://rdf.data-vocabulary.org/#">
+//
+// However, I was never able to get a <META v:name=Recipe Node title>" tag in the HTML sourc.
+// However, I was able to get 5/5 tests pass, and one test seems to confirm the
+// existence of the v:name= attribute...
+function rdf_example_rdf_namespaces() {
+  return array(
+    // Google's namespace for their custom vocabularies.
+    'v' => 'http://rdf.data-vocabulary.org/#',
+  );
+}
+
+
+
+/**
+ * Implements hook_help().
+ */
+function rdf_example_help($path, $arg) {
+  switch ($path) {
+    case 'examples/rdf_example':
+      return "<p>" . t(
+        "The RDF Example module provides RDF mappings for a custom node type and
+        alters another node type's RDF mapping.
+        You can check your RDF using a <a href='!parser'>parser</a> by copying
+        and pasting your HTML source code into the box. For clearest results,
+        use Turtle as your output format.",
+        array('!parser' => url('http://www.w3.org/2007/08/pyRdfa/#distill_by_input'))
+      ) . "</p>";
+    case 'admin/help#rdf_example':
+      // This is also viewable from a 'Help' link on the Module page near the module listing
+      return t('This is simple help text for rdf_example');
+  }
 }
